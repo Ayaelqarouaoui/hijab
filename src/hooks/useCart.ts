@@ -7,11 +7,19 @@ export const useCart = () => {
   const [sessionId, setSessionId] = useState<string>('');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [shippingCost, setShippingCost] = useState(0);
+
+  const SHIPPING_THRESHOLD = 300;
+  const SHIPPING_COST = 50;
 
   useEffect(() => {
     const id = localStorage.getItem('chalher_session_id') || `session_${Date.now()}_${Math.random()}`;
     localStorage.setItem('chalher_session_id', id);
     setSessionId(id);
+
+    const savedPayment = localStorage.getItem('chalher_payment_method');
+    if (savedPayment) setPaymentMethod(savedPayment);
 
     const fetchProducts = async () => {
       const { data } = await supabase.from('products').select('*');
@@ -76,7 +84,27 @@ export const useCart = () => {
     }
   };
 
+  const getSubtotal = useCallback(() => {
+    return cartItems.reduce((sum, item) => {
+      const product = products.find(p => p.id === item.product_id);
+      return sum + ((product?.price || 54.95) * item.quantity);
+    }, 0);
+  }, [cartItems, products]);
+
+  useEffect(() => {
+    const subtotal = getSubtotal();
+    const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+    setShippingCost(shipping);
+  }, [getSubtotal]);
+
+  const updatePaymentMethod = (method: string) => {
+    setPaymentMethod(method);
+    localStorage.setItem('chalher_payment_method', method);
+  };
+
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = getSubtotal();
+  const total = subtotal + shippingCost;
 
   return {
     cartItems,
@@ -88,5 +116,11 @@ export const useCart = () => {
     updateQuantity,
     cartCount,
     fetchCart,
+    paymentMethod,
+    updatePaymentMethod,
+    subtotal,
+    shippingCost,
+    total,
+    SHIPPING_THRESHOLD,
   };
 };

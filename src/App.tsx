@@ -11,7 +11,22 @@ function App() {
   const [showCart, setShowCart] = useState(false);
   const [addedSuccess, setAddedSuccess] = useState(false);
 
-  const { cartItems, products, loading, addToCart, removeFromCart, updateQuantity, cartCount, fetchCart } = useCart();
+  const {
+    cartItems,
+    products,
+    loading,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    cartCount,
+    fetchCart,
+    paymentMethod,
+    updatePaymentMethod,
+    subtotal,
+    shippingCost,
+    total,
+    SHIPPING_THRESHOLD
+  } = useCart();
 
   const productNumbers = Array.from({ length: 18 }, (_, i) => i + 1);
 
@@ -123,7 +138,7 @@ function App() {
                     <div className="cart-item-info">
                       <p className="cart-item-name">{product?.title}</p>
                       {item.message && <p className="cart-item-message">Message: {item.message}</p>}
-                      <p className="cart-item-price">{(product?.price || 54.95).toFixed(2)} €</p>
+                      <p className="cart-item-price">{(product?.price || 54.95).toFixed(2)} MAD</p>
                     </div>
                     <div className="cart-item-qty">
                       <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
@@ -140,8 +155,74 @@ function App() {
           </div>
           {cartItems.length > 0 && (
             <div className="cart-footer">
+              <div className="shipping-info">
+                <div className="shipping-row">
+                  <p>Sous-total:</p>
+                  <span>{subtotal.toFixed(2)} MAD</span>
+                </div>
+                {shippingCost > 0 ? (
+                  <div className="shipping-row">
+                    <p>Livraison:</p>
+                    <span>{shippingCost.toFixed(2)} MAD</span>
+                  </div>
+                ) : (
+                  <div className="shipping-row free">
+                    <p><i className="fas fa-check-circle"></i> Livraison gratuite</p>
+                  </div>
+                )}
+                {shippingCost > 0 && (
+                  <p className="free-shipping-hint">Gratuite à partir de {SHIPPING_THRESHOLD} MAD</p>
+                )}
+              </div>
+
+              <div className="payment-methods">
+                <p className="payment-label">Mode de paiement:</p>
+                <div className="payment-options">
+                  <label className="payment-option">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="card"
+                      checked={paymentMethod === 'card'}
+                      onChange={(e) => updatePaymentMethod(e.target.value)}
+                    />
+                    <span><i className="fas fa-credit-card"></i> Carte bancaire</span>
+                  </label>
+                  <label className="payment-option">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="paypal"
+                      checked={paymentMethod === 'paypal'}
+                      onChange={(e) => updatePaymentMethod(e.target.value)}
+                    />
+                    <span><i className="fab fa-paypal"></i> PayPal</span>
+                  </label>
+                  <label className="payment-option">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="virement"
+                      checked={paymentMethod === 'virement'}
+                      onChange={(e) => updatePaymentMethod(e.target.value)}
+                    />
+                    <span><i className="fas fa-university"></i> Virement bancaire</span>
+                  </label>
+                  <label className="payment-option">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={(e) => updatePaymentMethod(e.target.value)}
+                    />
+                    <span><i className="fas fa-money-bill"></i> Paiement à la livraison</span>
+                  </label>
+                </div>
+              </div>
+
               <div className="cart-total">
-                <p>Total: <strong>{getTotalPrice()} €</strong></p>
+                <p>Total: <strong>{total.toFixed(2)} MAD</strong></p>
               </div>
               <button className="checkout-btn">COMMANDER</button>
             </div>
@@ -158,7 +239,7 @@ function App() {
       </section>
 
       <section className="reassurance">
-        <div className="re-item"><i className="fas fa-truck"></i> LIVRAISON OFFERTE</div>
+        <div className="re-item"><i className="fas fa-truck"></i> LIVRAISON OFFERTE À PARTIR DE 300 MAD</div>
         <div className="re-item"><i className="fas fa-sync"></i> SATISFAIT OU REMBOURSÉ</div>
         <div className="re-item"><i className="fas fa-lock"></i> PAIEMENT SÉCURISÉ</div>
       </section>
